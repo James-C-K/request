@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客訴與需求申請表單</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f3f4f6; }
+        .required::after { content: " *"; color: red; }
+    </style>
+</head>
+<body>
+
+<div id="app" class="max-w-3xl mx-auto my-10 bg-white p-8 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">內部客訴與需求申請表</h1>
+
+    <form @submit.prevent="submitForm" class="space-y-5">
+        
+        <div>
+            <label class="block font-medium mb-1 required">Email</label>
+            <input type="email" v-model="form.email" required class="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
+        <div>
+            <label class="block font-medium mb-1 required">你的單位</label>
+            <select v-model="form.department" required class="w-full border rounded p-2 bg-white">
+                <option value="" disabled>請選擇</option>
+                <option>業務部門</option>
+                <option>業務經辦</option>
+                <option>客服部門</option>
+                <option>人資部門</option>
+                <option>會計部門</option>
+                <option>產品維運</option>
+                <option>產品研發</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block font-medium mb-1 required">品牌</label>
+            <input type="text" v-model="form.brand" placeholder="請輸入品牌名稱" required class="w-full border rounded p-2">
+        </div>
+
+        <div>
+            <label class="block font-medium mb-1 required">類型 (可複選)</label>
+            <div class="flex space-x-4">
+                <label class="flex items-center"><input type="checkbox" value="客訴" v-model="form.requestType" class="mr-2"> 客訴</label>
+                <label class="flex items-center"><input type="checkbox" value="需求" v-model="form.requestType" class="mr-2"> 需求</label>
+            </div>
+        </div>
+
+        <div class="p-4 bg-gray-50 rounded border">
+            <label class="block font-medium mb-2 required">提出類型分類</label>
+            <select v-model="form.category" @change="resetSubFields" required class="w-full border rounded p-2 bg-white mb-4">
+                <option value="" disabled>請選擇分類</option>
+                <optgroup label="師資教學">
+                    <option value="業師總監">業師總監</option>
+                </optgroup>
+                <optgroup label="學生學習">
+                    <option value="新生導覽">新生導覽</option>
+                    <option value="學生專案">學生專案</option>
+                    <option value="學生接案">學生接案</option>
+                </optgroup>
+                <optgroup label="產品行政">
+                    <option value="學習助教">學習助教</option>
+                    <option value="學習教練">學習教練</option>
+                    <option value="業務資料">業務資料</option>
+                    <option value="銷售方案">銷售方案</option>
+                    <option value="產品設計">產品設計</option>
+                    <option value="系統問題">系統問題</option>
+                    <option value="線上課程">線上課程</option>
+                    <option value="實體課程">實體課程</option>
+                </optgroup>
+            </select>
+
+            <div v-if="form.category === '業師總監'">
+                <label class="block text-sm font-medium mb-1 required">老師姓名</label>
+                <input type="text" v-model="form.extraName" required class="w-full border rounded p-2">
+            </div>
+
+            <div v-if="['新生導覽', '學生專案', '學生接案'].includes(form.category)">
+                <label class="block text-sm font-medium mb-1 required">學生姓名</label>
+                <input type="text" v-model="form.extraName" required class="w-full border rounded p-2">
+            </div>
+
+            <div v-if="isProductAdminGroup">
+                <label class="block text-sm font-medium mb-2 required">相關產品 (可複選)</label>
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <label v-for="item in ['學米', '無限', '職能', '財經', 'XLAB', '墨宇']" :key="item" class="flex items-center">
+                        <input type="checkbox" :value="item" v-model="form.productChecks" class="mr-2"> {{ item }}
+                    </label>
+                </div>
+
+                <div v-if="form.category === '線上課程'" class="mt-2">
+                    <label class="block text-sm font-medium mb-1 required">詳細問題分類</label>
+                    <select v-model="form.subIssue" required class="w-full border rounded p-2">
+                        <option value="教材問題">教材問題</option>
+                        <option value="字幕問題">字幕問題</option>
+                        <option value="影片問題">影片問題</option>
+                        <option value="系統問題">系統問題</option>
+                    </select>
+                </div>
+
+                <div v-if="form.category === '實體課程'" class="mt-2">
+                    <label class="block text-sm font-medium mb-1 required">詳細問題分類</label>
+                    <select v-model="form.subIssue" required class="w-full border rounded p-2">
+                        <option value="教材問題">教材問題</option>
+                        <option value="影片問題">影片問題</option>
+                        <option value="系統問題">系統問題</option>
+                        <option value="課程問題">課程問題</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <label class="block font-medium mb-1 required">詳述你的問題</label>
+            <textarea v-model="form.description" rows="4" required class="w-full border rounded p-2"></textarea>
+        </div>
+
+        <div>
+            <label class="block font-medium mb-1">上傳檔案 (選填)</label>
+            <input type="file" @change="handleFileUpload" class="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100">
+        </div>
+
+        <button type="submit" :disabled="isSubmitting" 
+            class="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 transition disabled:bg-gray-400">
+            {{ isSubmitting ? '資料傳送中...' : '送出表單' }}
+        </button>
+
+    </form>
+</div>
+
+<script>
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                isSubmitting: false,
+                form: {
+                    email: '',
+                    department: '',
+                    brand: '',
+                    requestType: [],
+                    category: '',
+                    extraName: '',     // 統一存放 老師姓名 或 學生姓名
+                    productChecks: [], // 存放 學米、無限...
+                    subIssue: '',      // 存放 教材問題、字幕問題...
+                    description: '',
+                    file: null
+                }
+            }
+        },
+        computed: {
+            isProductAdminGroup() {
+                const group = [
+                    '學習助教', '學習教練', '業務資料', '銷售方案', 
+                    '產品設計', '系統問題', '線上課程', '實體課程'
+                ];
+                return group.includes(this.form.category);
+            }
+        },
+        methods: {
+            resetSubFields() {
+                // 切換大分類時，清空子選項，避免資料混淆
+                this.form.extraName = '';
+                this.form.productChecks = [];
+                this.form.subIssue = '';
+            },
+            handleFileUpload(event) {
+                this.form.file = event.target.files[0];
+            },
+            async submitForm() {
+                if (this.form.requestType.length === 0) {
+                    alert('請至少勾選一個「客訴」或「需求」');
+                    return;
+                }
+                if (this.isProductAdminGroup && this.form.productChecks.length === 0) {
+                    alert('請至少勾選一個產品 (學米/無限...)');
+                    return;
+                }
+
+                this.isSubmitting = true;
+
+                // 準備要傳送的資料 (FormData 格式，為了支援檔案上傳)
+                const formData = new FormData();
+                formData.append('email', this.form.email);
+                formData.append('department', this.form.department);
+                formData.append('brand', this.form.brand);
+                formData.append('requestType', this.form.requestType.join(', '));
+                formData.append('category', this.form.category);
+                formData.append('extraName', this.form.extraName);
+                formData.append('productChecks', this.form.productChecks.join(', '));
+                formData.append('subIssue', this.form.subIssue);
+                formData.append('description', this.form.description);
+                
+                if (this.form.file) {
+                    formData.append('file', this.form.file);
+                }
+
+                // ********** 設定 n8n Webhook URL **********
+                // 請將下方的網址換成你的 n8n Production URL
+                const N8N_WEBHOOK_URL = 'https://你的n8n網址/webhook/submit-form'; 
+
+                try {
+                    const response = await fetch(N8N_WEBHOOK_URL, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        alert('表單已成功送出！');
+                        window.location.reload(); // 重新整理頁面
+                    } else {
+                        alert('送出失敗，請稍後再試。');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('發生錯誤，請檢查網路連線。');
+                } finally {
+                    this.isSubmitting = false;
+                }
+            }
+        }
+    }).mount('#app');
+</script>
+
+</body>
+</html>
