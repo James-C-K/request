@@ -35,8 +35,7 @@
                 <option>業務部門</option>
                 <option>業務經辦</option>
                 <option>客服部門</option>
-                <option>人資部門</option>
-                <option>會計部門</option>
+                <option>總務部門</option> <option>會計部門</option>
                 <option>產品維運</option>
                 <option>產品研發</option>
             </select>
@@ -83,7 +82,7 @@
             <div class="mt-4 border-t pt-4">
                 <label class="block font-medium mb-2 required">所屬品牌 (單選)</label>
                 <div class="grid grid-cols-3 gap-3">
-                    <label v-for="brand in ['學米', '無限', '職能', '財經', 'XLAB', '墨宇']" :key="brand" 
+                    <label v-for="brand in ['學米', '無限', '職能', '財經', 'XLAB', 'X Platform']" :key="brand" 
                            class="flex items-center cursor-pointer p-2 border rounded hover:bg-blue-50 transition bg-white">
                         <input type="radio" :value="brand" v-model="form.selectedBrand" class="mr-2 w-4 h-4 text-blue-600">
                         <span>{{ brand }}</span>
@@ -122,6 +121,11 @@
                     <option value="課程問題">課程問題</option>
                 </select>
             </div>
+        </div>
+
+        <div>
+            <label class="block font-medium mb-1">CRM (簡述) - URL</label>
+            <input type="url" v-model="form.crmLink" placeholder="請輸入網址 (例如: https://...)" class="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
 
         <div>
@@ -165,6 +169,7 @@
                     selectedBrand: '',  // 單選 (學米/無限...)
                     extraName: '',      
                     subIssue: '',       
+                    crmLink: '',        // 新增：CRM 連結
                     description: '',
                     files: []           // 改為陣列，存放多個檔案
                 }
@@ -196,6 +201,7 @@
                 formData.append('selectedBrand', this.form.selectedBrand);
                 formData.append('extraName', this.form.extraName);
                 formData.append('subIssue', this.form.subIssue);
+                formData.append('crmLink', this.form.crmLink); // 新增：送出 CRM 連結
                 formData.append('description', this.form.description);
                 
                 // 處理多檔案上傳
