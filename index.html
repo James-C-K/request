@@ -9,12 +9,7 @@
     <style>
         body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f3f4f6; }
         .required::after { content: " *"; color: red; }
-        /* Radio 選中樣式優化 */
-        input[type="radio"]:checked + span {
-            font-weight: bold;
-            color: #2563eb;
-        }
-        /* 淡入動畫 */
+        input[type="radio"]:checked + span { font-weight: bold; color: #2563eb; }
         .fade-enter-active, .fade-leave-active { transition: opacity 0.5s; }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
     </style>
@@ -158,7 +153,6 @@
                 class="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 transition disabled:bg-gray-400">
                 {{ isSubmitting ? '資料傳送中...' : '送出表單' }}
             </button>
-
         </form>
     </div>
 
@@ -170,6 +164,13 @@
         </div>
         
         <h2 class="text-xl font-semibold text-gray-900 mb-2">資料已成功提交！</h2>
+        
+        <div v-if="responseCaseId" class="mb-6">
+            <span class="bg-yellow-100 text-yellow-800 text-lg font-bold px-4 py-2 rounded-lg border border-yellow-200">
+                案件編號：{{ responseCaseId }}
+            </span>
+        </div>
+
         <p class="text-gray-500 mb-8">以下是您剛剛送出的內容備份：</p>
 
         <div class="bg-gray-50 rounded-lg p-6 text-left space-y-3 text-sm border border-gray-200 mb-8">
@@ -236,7 +237,8 @@
         data() {
             return {
                 isSubmitting: false,
-                isSubmitted: false, // 控制是否顯示成功頁面
+                isSubmitted: false,
+                responseCaseId: '', // 儲存後端回傳的案件編號
                 form: {
                     email: '',
                     department: '',
@@ -259,7 +261,6 @@
             handleFileUpload(event) {
                 this.form.files = Array.from(event.target.files);
             },
-            // 重置表單並回到填寫頁面
             resetForm() {
                 this.form = {
                     email: '',
@@ -273,8 +274,8 @@
                     description: '',
                     files: []
                 };
-                // 如果需要保留 Email 或 單位，可以註解掉上面那行，改為部分清空
                 this.isSubmitted = false;
+                this.responseCaseId = ''; // 清空編號
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             },
             async submitForm() {
@@ -311,7 +312,19 @@
                     });
 
                     if (response.ok) {
-                        // 成功：切換到成功頁面，而不是 alert
+                        // === 這裡修改了：解析回傳的 JSON 並取出 caseId ===
+                        const responseData = await response.json();
+                        
+                        // 嘗試從回傳資料中找到 caseId (n8n 可能回傳陣列或物件)
+                        if (responseData.caseId) {
+                            this.responseCaseId = responseData.caseId;
+                        } else if (Array.isArray(responseData) && responseData[0] && responseData[0].caseId) {
+                            this.responseCaseId = responseData[0].caseId;
+                        } else {
+                             // 若真的沒抓到，至少顯示一個提示
+                             this.responseCaseId = '已生成 (請查看郵件)';
+                        }
+
                         this.isSubmitted = true;
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     } else {
