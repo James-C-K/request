@@ -14,144 +14,219 @@
             font-weight: bold;
             color: #2563eb;
         }
+        /* 淡入動畫 */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.5s; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
     </style>
 </head>
 <body>
 
-<div id="app" class="max-w-3xl mx-auto my-10 bg-white p-8 rounded-lg shadow-md">
-    <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">內部客訴與需求申請表</h1>
+<div id="app" class="max-w-3xl mx-auto my-10 bg-white p-8 rounded-lg shadow-md min-h-[600px]">
+    
+    <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">
+        {{ isSubmitted ? '案件已成功送出' : '內部客訴與需求申請表' }}
+    </h1>
 
-    <form @submit.prevent="submitForm" class="space-y-6">
-        
-        <div>
-            <label class="block font-medium mb-1 required">Email</label>
-            <input type="email" v-model="form.email" required class="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-
-        <div>
-            <label class="block font-medium mb-1 required">你的單位</label>
-            <select v-model="form.department" required class="w-full border rounded p-2 bg-white">
-                <option value="" disabled>請選擇</option>
-                <option>業務部門</option>
-                <option>業務經辦</option>
-                <option>客服部門</option>
-                <option>總務部門</option> <option>會計部門</option>
-                <option>產品維運</option>
-                <option>產品研發</option>
-            </select>
-        </div>
-
-        <div>
-            <label class="block font-medium mb-2 required">類型 (單選)</label>
-            <div class="flex space-x-6">
-                <label class="flex items-center cursor-pointer">
-                    <input type="radio" value="客訴" v-model="form.requestType" class="mr-2 w-4 h-4">
-                    <span>客訴</span>
-                </label>
-                <label class="flex items-center cursor-pointer">
-                    <input type="radio" value="需求" v-model="form.requestType" class="mr-2 w-4 h-4">
-                    <span>需求</span>
-                </label>
+    <div v-if="!isSubmitted">
+        <form @submit.prevent="submitForm" class="space-y-6">
+            
+            <div>
+                <label class="block font-medium mb-1 required">Email</label>
+                <input type="email" v-model="form.email" required class="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none">
             </div>
-        </div>
 
-        <div class="p-5 bg-gray-50 rounded border border-gray-200">
-            <label class="block font-medium mb-2 required">提出類型分類</label>
-            <select v-model="form.category" @change="resetSubFields" required class="w-full border rounded p-2 bg-white mb-4">
-                <option value="" disabled>請選擇分類</option>
-                <optgroup label="師資教學">
-                    <option value="業師總監">業師總監</option>
-                </optgroup>
-                <optgroup label="學生學習">
-                    <option value="新生導覽">新生導覽</option>
-                    <option value="學生專案">學生專案</option>
-                    <option value="學生接案">學生接案</option>
-                </optgroup>
-                <optgroup label="產品行政">
-                    <option value="學習助教">學習助教</option>
-                    <option value="學習教練">學習教練</option>
-                    <option value="業務資料">業務資料</option>
-                    <option value="銷售方案">銷售方案</option>
-                    <option value="產品設計">產品設計</option>
-                    <option value="系統問題">系統問題</option>
-                    <option value="線上課程">線上課程</option>
-                    <option value="實體課程">實體課程</option>
-                </optgroup>
-            </select>
+            <div>
+                <label class="block font-medium mb-1 required">你的單位</label>
+                <select v-model="form.department" required class="w-full border rounded p-2 bg-white">
+                    <option value="" disabled>請選擇</option>
+                    <option>業務部門</option>
+                    <option>業務經辦</option>
+                    <option>客服部門</option>
+                    <option>總務部門</option>
+                    <option>會計部門</option>
+                    <option>產品維運</option>
+                    <option>產品研發</option>
+                </select>
+            </div>
 
-            <div class="mt-4 border-t pt-4">
-                <label class="block font-medium mb-2 required">所屬品牌 (單選)</label>
-                <div class="grid grid-cols-3 gap-3">
-                    <label v-for="brand in ['學米', '無限', '職能', '財經', 'XLAB', 'X Platform']" :key="brand" 
-                           class="flex items-center cursor-pointer p-2 border rounded hover:bg-blue-50 transition bg-white">
-                        <input type="radio" :value="brand" v-model="form.selectedBrand" class="mr-2 w-4 h-4 text-blue-600">
-                        <span>{{ brand }}</span>
+            <div>
+                <label class="block font-medium mb-2 required">類型 (單選)</label>
+                <div class="flex space-x-6">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" value="客訴" v-model="form.requestType" class="mr-2 w-4 h-4">
+                        <span>客訴</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" value="需求" v-model="form.requestType" class="mr-2 w-4 h-4">
+                        <span>需求</span>
                     </label>
                 </div>
             </div>
 
-            <div v-if="form.category === '業師總監'" class="mt-4">
-                <label class="block text-sm font-medium mb-1 required text-blue-800">老師姓名</label>
-                <input type="text" v-model="form.extraName" required class="w-full border rounded p-2 border-blue-200">
-            </div>
-
-            <div v-if="['新生導覽', '學生專案', '學生接案'].includes(form.category)" class="mt-4">
-                <label class="block text-sm font-medium mb-1 required text-blue-800">學生姓名</label>
-                <input type="text" v-model="form.extraName" required class="w-full border rounded p-2 border-blue-200">
-            </div>
-
-            <div v-if="form.category === '線上課程'" class="mt-4">
-                <label class="block text-sm font-medium mb-1 required text-blue-800">詳細問題分類</label>
-                <select v-model="form.subIssue" required class="w-full border rounded p-2 border-blue-200">
-                    <option value="" disabled>請選擇</option>
-                    <option value="教材問題">教材問題</option>
-                    <option value="字幕問題">字幕問題</option>
-                    <option value="影片問題">影片問題</option>
-                    <option value="系統問題">系統問題</option>
+            <div class="p-5 bg-gray-50 rounded border border-gray-200">
+                <label class="block font-medium mb-2 required">提出類型分類</label>
+                <select v-model="form.category" @change="resetSubFields" required class="w-full border rounded p-2 bg-white mb-4">
+                    <option value="" disabled>請選擇分類</option>
+                    <optgroup label="師資教學">
+                        <option value="業師總監">業師總監</option>
+                    </optgroup>
+                    <optgroup label="學生學習">
+                        <option value="新生導覽">新生導覽</option>
+                        <option value="學生專案">學生專案</option>
+                        <option value="學生接案">學生接案</option>
+                    </optgroup>
+                    <optgroup label="產品行政">
+                        <option value="學習助教">學習助教</option>
+                        <option value="學習教練">學習教練</option>
+                        <option value="業務資料">業務資料</option>
+                        <option value="銷售方案">銷售方案</option>
+                        <option value="產品設計">產品設計</option>
+                        <option value="系統問題">系統問題</option>
+                        <option value="線上課程">線上課程</option>
+                        <option value="實體課程">實體課程</option>
+                    </optgroup>
                 </select>
+
+                <div class="mt-4 border-t pt-4">
+                    <label class="block font-medium mb-2 required">所屬品牌 (單選)</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label v-for="brand in ['學米', '無限', '職能', '財經', 'XLAB', 'X Platform']" :key="brand" 
+                               class="flex items-center cursor-pointer p-2 border rounded hover:bg-blue-50 transition bg-white">
+                            <input type="radio" :value="brand" v-model="form.selectedBrand" class="mr-2 w-4 h-4 text-blue-600">
+                            <span>{{ brand }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div v-if="form.category === '業師總監'" class="mt-4">
+                    <label class="block text-sm font-medium mb-1 required text-blue-800">老師姓名</label>
+                    <input type="text" v-model="form.extraName" required class="w-full border rounded p-2 border-blue-200">
+                </div>
+
+                <div v-if="['新生導覽', '學生專案', '學生接案'].includes(form.category)" class="mt-4">
+                    <label class="block text-sm font-medium mb-1 required text-blue-800">學生姓名</label>
+                    <input type="text" v-model="form.extraName" required class="w-full border rounded p-2 border-blue-200">
+                </div>
+
+                <div v-if="form.category === '線上課程'" class="mt-4">
+                    <label class="block text-sm font-medium mb-1 required text-blue-800">詳細問題分類</label>
+                    <select v-model="form.subIssue" required class="w-full border rounded p-2 border-blue-200">
+                        <option value="" disabled>請選擇</option>
+                        <option value="教材問題">教材問題</option>
+                        <option value="字幕問題">字幕問題</option>
+                        <option value="影片問題">影片問題</option>
+                        <option value="系統問題">系統問題</option>
+                    </select>
+                </div>
+
+                <div v-if="form.category === '實體課程'" class="mt-4">
+                    <label class="block text-sm font-medium mb-1 required text-blue-800">詳細問題分類</label>
+                    <select v-model="form.subIssue" required class="w-full border rounded p-2 border-blue-200">
+                        <option value="" disabled>請選擇</option>
+                        <option value="教材問題">教材問題</option>
+                        <option value="影片問題">影片問題</option>
+                        <option value="系統問題">系統問題</option>
+                        <option value="課程問題">課程問題</option>
+                    </select>
+                </div>
             </div>
 
-            <div v-if="form.category === '實體課程'" class="mt-4">
-                <label class="block text-sm font-medium mb-1 required text-blue-800">詳細問題分類</label>
-                <select v-model="form.subIssue" required class="w-full border rounded p-2 border-blue-200">
-                    <option value="" disabled>請選擇</option>
-                    <option value="教材問題">教材問題</option>
-                    <option value="影片問題">影片問題</option>
-                    <option value="系統問題">系統問題</option>
-                    <option value="課程問題">課程問題</option>
-                </select>
+            <div>
+                <label class="block font-medium mb-1">CRM (簡述) - URL</label>
+                <input type="url" v-model="form.crmLink" placeholder="請輸入網址 (例如: https://...)" class="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+
+            <div>
+                <label class="block font-medium mb-1 required">詳述你的問題</label>
+                <textarea v-model="form.description" rows="4" required class="w-full border rounded p-2"></textarea>
+            </div>
+
+            <div>
+                <label class="block font-medium mb-1">上傳檔案 (可多選)</label>
+                <input type="file" multiple @change="handleFileUpload" class="block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-blue-50 file:text-blue-700
+                  hover:file:bg-blue-100">
+                <p v-if="form.files.length > 0" class="mt-1 text-sm text-green-600">
+                    已選擇 {{ form.files.length }} 個檔案
+                </p>
+            </div>
+
+            <button type="submit" :disabled="isSubmitting" 
+                class="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 transition disabled:bg-gray-400">
+                {{ isSubmitting ? '資料傳送中...' : '送出表單' }}
+            </button>
+
+        </form>
+    </div>
+
+    <div v-else class="text-center py-8 fade-in">
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+            <svg class="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">資料已成功提交！</h2>
+        <p class="text-gray-500 mb-8">以下是您剛剛送出的內容備份：</p>
+
+        <div class="bg-gray-50 rounded-lg p-6 text-left space-y-3 text-sm border border-gray-200 mb-8">
+            <div class="grid grid-cols-3 border-b border-gray-200 pb-2">
+                <span class="font-bold text-gray-500">Email</span>
+                <span class="col-span-2 text-gray-800 break-all">{{ form.email }}</span>
+            </div>
+            <div class="grid grid-cols-3 border-b border-gray-200 pb-2">
+                <span class="font-bold text-gray-500">單位</span>
+                <span class="col-span-2 text-gray-800">{{ form.department }}</span>
+            </div>
+            <div class="grid grid-cols-3 border-b border-gray-200 pb-2">
+                <span class="font-bold text-gray-500">類型</span>
+                <span class="col-span-2 text-gray-800">{{ form.requestType }}</span>
+            </div>
+            <div class="grid grid-cols-3 border-b border-gray-200 pb-2">
+                <span class="font-bold text-gray-500">分類</span>
+                <span class="col-span-2 text-gray-800">{{ form.selectedBrand }} - {{ form.category }}</span>
+            </div>
+            
+            <div v-if="form.extraName" class="grid grid-cols-3 border-b border-gray-200 pb-2">
+                <span class="font-bold text-gray-500">相關姓名</span>
+                <span class="col-span-2 text-gray-800">{{ form.extraName }}</span>
+            </div>
+            
+            <div v-if="form.subIssue" class="grid grid-cols-3 border-b border-gray-200 pb-2">
+                <span class="font-bold text-gray-500">詳細問題</span>
+                <span class="col-span-2 text-gray-800">{{ form.subIssue }}</span>
+            </div>
+
+            <div v-if="form.crmLink" class="grid grid-cols-3 border-b border-gray-200 pb-2">
+                <span class="font-bold text-gray-500">CRM 連結</span>
+                <a :href="form.crmLink" target="_blank" class="col-span-2 text-blue-600 underline truncate">{{ form.crmLink }}</a>
+            </div>
+
+            <div class="grid grid-cols-3 border-b border-gray-200 pb-2">
+                <span class="font-bold text-gray-500">問題詳述</span>
+                <span class="col-span-2 text-gray-800 whitespace-pre-wrap">{{ form.description }}</span>
+            </div>
+
+            <div class="grid grid-cols-3">
+                <span class="font-bold text-gray-500">上傳檔案</span>
+                <span class="col-span-2 text-gray-800">
+                    <span v-if="form.files.length === 0">無</span>
+                    <ul v-else class="list-disc pl-4">
+                        <li v-for="file in form.files" :key="file.name">{{ file.name }}</li>
+                    </ul>
+                </span>
             </div>
         </div>
 
-        <div>
-            <label class="block font-medium mb-1">CRM (簡述) - URL</label>
-            <input type="url" v-model="form.crmLink" placeholder="請輸入網址 (例如: https://...)" class="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-
-        <div>
-            <label class="block font-medium mb-1 required">詳述你的問題</label>
-            <textarea v-model="form.description" rows="4" required class="w-full border rounded p-2"></textarea>
-        </div>
-
-        <div>
-            <label class="block font-medium mb-1">上傳檔案 (可多選)</label>
-            <input type="file" multiple @change="handleFileUpload" class="block w-full text-sm text-gray-500
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-full file:border-0
-              file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100">
-            <p v-if="form.files.length > 0" class="mt-1 text-sm text-green-600">
-                已選擇 {{ form.files.length }} 個檔案
-            </p>
-        </div>
-
-        <button type="submit" :disabled="isSubmitting" 
-            class="w-full bg-blue-600 text-white font-bold py-3 rounded hover:bg-blue-700 transition disabled:bg-gray-400">
-            {{ isSubmitting ? '資料傳送中...' : '送出表單' }}
+        <button @click="resetForm" 
+            class="w-full bg-white border border-blue-600 text-blue-600 font-bold py-3 rounded hover:bg-blue-50 transition">
+            再次填寫
         </button>
+    </div>
 
-    </form>
 </div>
 
 <script>
@@ -161,17 +236,18 @@
         data() {
             return {
                 isSubmitting: false,
+                isSubmitted: false, // 控制是否顯示成功頁面
                 form: {
                     email: '',
                     department: '',
-                    requestType: '',    // 單選 (客訴/需求)
+                    requestType: '',    
                     category: '',
-                    selectedBrand: '',  // 單選 (學米/無限...)
+                    selectedBrand: '',  
                     extraName: '',      
                     subIssue: '',       
-                    crmLink: '',        // 新增：CRM 連結
+                    crmLink: '',        
                     description: '',
-                    files: []           // 改為陣列，存放多個檔案
+                    files: []           
                 }
             }
         },
@@ -181,11 +257,27 @@
                 this.form.subIssue = '';
             },
             handleFileUpload(event) {
-                // 將 FileList 轉換為 Array
                 this.form.files = Array.from(event.target.files);
             },
+            // 重置表單並回到填寫頁面
+            resetForm() {
+                this.form = {
+                    email: '',
+                    department: '',
+                    requestType: '',
+                    category: '',
+                    selectedBrand: '',
+                    extraName: '',
+                    subIssue: '',
+                    crmLink: '',
+                    description: '',
+                    files: []
+                };
+                // 如果需要保留 Email 或 單位，可以註解掉上面那行，改為部分清空
+                this.isSubmitted = false;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
             async submitForm() {
-                // 基礎驗證
                 if (!this.form.selectedBrand) {
                     alert('請選擇「所屬品牌」');
                     return;
@@ -201,19 +293,15 @@
                 formData.append('selectedBrand', this.form.selectedBrand);
                 formData.append('extraName', this.form.extraName);
                 formData.append('subIssue', this.form.subIssue);
-                formData.append('crmLink', this.form.crmLink); // 新增：送出 CRM 連結
+                formData.append('crmLink', this.form.crmLink); 
                 formData.append('description', this.form.description);
                 
-                // 處理多檔案上傳
                 if (this.form.files.length > 0) {
                     this.form.files.forEach((file) => {
-                        // 重點：全部使用 'files' 這個 key，n8n 會自動處理
                         formData.append('files', file); 
                     });
                 }
 
-                // ********** 設定 n8n Webhook URL **********
-                // 請將下方的網址換成你的 n8n Production URL
                 const N8N_WEBHOOK_URL = 'https://ooschoolall.zeabur.app/webhook/submit-form'; 
 
                 try {
@@ -223,8 +311,9 @@
                     });
 
                     if (response.ok) {
-                        alert('表單已成功送出！');
-                        window.location.reload(); 
+                        // 成功：切換到成功頁面，而不是 alert
+                        this.isSubmitted = true;
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                     } else {
                         alert('送出失敗，請稍後再試。');
                     }
